@@ -51,17 +51,10 @@
 .keypad {
     width: 100%;
     display: grid;
-    justify-content: center;
+    justify-content: stretch;
     margin: .5em 0;
     padding: 0 .5em;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: auto;
-    grid-template-areas: 
-        "seven eight nine divide"
-        "four five six multiply"
-        "one two three subtract"
-        "zero dot mod add"
-        ". . equals equals";
 }
 
 .keypad * {
@@ -81,72 +74,8 @@
     align-items: center;
 }
 
-#zero {
-    grid-area: zero;
-}
-
-#one {
-    grid-area: one;
-}
-
-#two {
-    grid-area: two;
-}
-
-#three {
-    grid-area: three;
-}
-
-#four {
-    grid-area: four;
-}
-
-#five {
-    grid-area: five;
-}
-
-#six {
-    grid-area: six;
-}
-
-#seven {
-    grid-area: seven;
-}
-
-#eight {
-    grid-area: eight;
-}
-
-#nine {
-    grid-area: nine;
-}
-
-#dot {
-    grid-area: dot;
-}
-
-#add {
-    grid-area: add;
-}
-
-#divide {
-    grid-area: divide;
-}
-
-#mod {
-    grid-area: mod;
-}
-
-#multiply {
-    grid-area: multiply;
-}
-
-#subtract {
-    grid-area: subtract;
-}
-
 #equals {
-    grid-area: equals;
+    grid-column: 3/5;
     background: hsl(120, 86%, 61%);
     border-radius: 4px;
 }
