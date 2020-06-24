@@ -1,124 +1,119 @@
-// Math functions
-function add(a, b){
-    return (+a + +b).toString();
-}
+/*************/
+/* Functions */
+/*************/
+// Import math functions
+import {add, subtract, multiply, divide, mod} from './math.js';
 
-function subtract(a, b){
-    return (+a - +b).toString();
-}
-
-function multiply(a, b){
-    return (+a * +b).toString();
-}
-
-function divide(a, b){
-    if(+a === 0 && +b === 0){
-        return "NaN";
-    } else if(+a === 0){
-        return "0";
-    } else if(+b === 0){
-        return "Trying to end the universe, are we?";
-    } else{
-        return (+a / +b).toString();
-    }
-}
-
-function mod(a, b){ 
-    if(+a === 0 && +b === 0){
-        return "NaN";
-    } else if(+a === 0){
-        return "0";
-    } else if(+b === 0){
-        return "Trying to end the universe, are we?";
-    } else{
-        return (+a % +b).toString();
-    }
-}
-
-// DOM interaction
-// Constants
-const matchRegex = /([%|+|\-|x|\u00f7;]|.+?(?=[%|+|\-|x|\u00f7;]|$))/g;
-const operatorRegex = /[%|+|\-|x|\u00f7;]/;
-const opsPlusDotRegex = /[%|+|\-|x|\u00f7;|\.]/;
-const highPriorityOpsRegex = /[x|\u00f7;|%]/;
-const lowPriorityOpsRegex = /[+|\-]/;
-const input = document.querySelector(".input");
-const results = document.querySelector(".results");
-
-// Functions
+// UI Functions
+// Handle GUI button presses
 function buttonPress(e){
-    //console.log(e.target.textContent);
-    let entry = e.target.textContent;
-    enterKey(entry);
+    let entry = e.target;
+    handleEntry(entry);
 }
 
-function enterKey(entry){
-    let splitInput = input.textContent.match(matchRegex);
-    console.log(splitInput)
-    // console.table(splitInput[0]);
-    if(entry === "."){
-        // console.log("dot");
-        if (splitInput == null || 
-                splitInput[splitInput.length-1].search(opsPlusDotRegex) === -1){
-            input.textContent += entry;
-        }
-    } else if(entry.search(operatorRegex) > -1){
-        // console.log("operator");
-        if(splitInput[0] !=null && 
-            splitInput[splitInput.length-1].search(operatorRegex) === -1){
-            input.textContent += entry;
-        }
-    } else if(entry === "=") {
-        let result = operate(splitInput);
-        results.appendChild(getResultsRow(result));
-        clearInput();
-    } else {
-        // console.log("other (number)");
-        input.textContent += entry;
+// Handle keyboard key presses
+function keyPress(e){
+    const entry = document.querySelector(`.key[data-key="${e.key}"]`);
+    if(entry === null) return;
+    handleEntry(entry);
+}
+
+// Perform function based on entry
+function handleEntry(entry){
+    const entryKey = entry.dataset.key;
+    const splitInput = input.textContent.match(matchRegex);
+
+    switch(entryKey){
+        case ".":
+            if (splitInput == null || 
+                    splitInput[splitInput.length-1]
+                    .search(opsPlusDotRegex) === -1){
+                input.textContent += entry.textContent;
+            }
+            break;
+        
+        case "+":
+        case "-":
+        case "*":
+        case "/":
+            if(splitInput[0] !=null && 
+                    splitInput[splitInput.length-1]
+                    .search(operatorRegex) === -1){
+                input.textContent += entry.textContent;
+            }
+            break;
+        
+        case "Backspace":
+            input.textContent = 
+                input.textContent.substr(0, input.textContent.length-1);
+            break;
+        
+        case "Escape":
+            clearInput();
+            break;
+        
+        case "Enter":
+            let result = operate(splitInput);
+            results.appendChild(getResultsRow(result));
+            clearInput();
+            break;
+
+        default:
+            input.textContent += entry.textContent;
     }
 }
 
-// Parse input and perform appropriate operations
+// Clear entire input
+function clearInput(e){
+    input.textContent = "";
+}
+
+// Parse input and perform appropriate operations, following PEMDAS priority
+// This works by taking the number before and after the operator and
+//  passing it to the appropriate function. The two numbers and the 
+//  operator are then replaced by the result of that operation, eventually
+//  reducing the entire input array to a single value, the end result
 function operate(inputArr){
+    let result;
+
     let nextOp = inputArr.findIndex(
         entry=>entry.search(highPriorityOpsRegex) > -1);
-    let temp;
     while(nextOp > -1){
-        console.table(inputArr);
         switch(inputArr[nextOp]){
             case "x":
-                temp = multiply(inputArr[nextOp-1], inputArr[nextOp+1]);
-                inputArr.splice(nextOp-1, 3, temp); //replace "axb" with result
+                result = multiply(inputArr[nextOp-1], inputArr[nextOp+1]);
+                inputArr.splice(nextOp-1, 3, result); //replace "axb" with result
                 break;
             case "%":
-                temp = mod(inputArr[nextOp-1], inputArr[nextOp+1]);
-                inputArr.splice(nextOp-1, 3, temp); //replace "a%b" with result
+                result = mod(inputArr[nextOp-1], inputArr[nextOp+1]);
+                inputArr.splice(nextOp-1, 3, result); //replace "a%b" with result
                 break;
             case "\u00f7":
-                temp = divide(inputArr[nextOp-1], inputArr[nextOp+1]);
-                inputArr.splice(nextOp-1, 3, temp); //replace "a/b" with result
+                result = divide(inputArr[nextOp-1], inputArr[nextOp+1]);
+                inputArr.splice(nextOp-1, 3, result); //replace "a/b" with result
                 break;
             default:
-                console.log("broken!");
+                console.log("High Priority broken!");
                 inputArr = [];
         }
         nextOp = inputArr.findIndex(
             entry=>entry.search(highPriorityOpsRegex) > -1);
     }
+
     nextOp = inputArr.findIndex(
         entry=>entry.search(lowPriorityOpsRegex) > -1);
     while(nextOp > -1 ){
         switch(inputArr[nextOp]){
             case "+":
-                temp = add(inputArr[nextOp-1], inputArr[nextOp+1]);
-                inputArr.splice(nextOp-1, 3, temp); //replace "a+b" with result
+                result = add(inputArr[nextOp-1], inputArr[nextOp+1]);
+                inputArr.splice(nextOp-1, 3, result); //replace "a+b" with result
                 break;
             case "-":
-                temp = subtract(inputArr[nextOp-1], inputArr[nextOp+1]);
-                inputArr.splice(nextOp-1, 3, temp); //replace "a-b" with result
+                result = subtract(inputArr[nextOp-1], inputArr[nextOp+1]);
+                inputArr.splice(nextOp-1, 3, result); //replace "a-b" with result
                 break;
             default:
-                console.log("broken!");
+                console.log("Low Priority broken!");
                 inputArr = [];
         }
         nextOp = inputArr.findIndex(
@@ -127,7 +122,7 @@ function operate(inputArr){
     return inputArr[0];
 }
 
-// Generate results row with result
+// Generate and return new results row showing the result
 function getResultsRow(result) {
     const resultRow = document.createElement("div");
     resultRow.classList.add("grid", "result");
@@ -142,52 +137,26 @@ function getResultsRow(result) {
 
     const resElem = document.createElement("div");
     resElem.style.cssText = "text-align: right;";
-    console.log(Math.round((+result + Number.EPSILON) * 100) / 100)
-    resElem.textContent = Math.round((+result + Number.EPSILON) * 1000000) / 1000000;
+    resElem.textContent = // Show max 8 decimal places
+        Math.round((+result + Number.EPSILON) * 100000000) / 100000000;
+    
     resultRow.appendChild(resElem);
     return resultRow;
 }
 
-function backspace(e){
-    input.textContent = input.textContent.substr(0, input.textContent.length-1);
-}
+// Constants
+const matchRegex = /([%|+|\-|x|\u00f7;]|.+?(?=[%|+|\-|x|\u00f7;]|$))/g;
+const operatorRegex = /[%|+|\-|x|\u00f7;]/;
+const opsPlusDotRegex = /[%|+|\-|x|\u00f7;|\.]/;
+const highPriorityOpsRegex = /[x|\u00f7;|%]/;
+const lowPriorityOpsRegex = /[+|\-]/;
+const input = document.querySelector(".input");
+const results = document.querySelector(".results");
 
-function clearInput(e){
-    input.textContent = "";
-}
-
-function keyPress(e){
-    const key = document.querySelector(`.key[data-key="${e.key}"]`);
-    console.log(e.key);
-    console.log(key);
-    if(key === null) return;
-    if(key.id === "backspace") backspace(e);
-    else if(key.id === "clear") clearInput(e);
-    else enterKey(key.textContent);
-}
-
-let keys = [...document.querySelectorAll(".btn")].filter(
-    key=>(key.id.search(/backspace|clear/))
-);
+// Initial setup
+const keys = [...document.querySelectorAll(".key")];
 keys.forEach(key=>{
     key.addEventListener('click', buttonPress);
 });
 
-keys = [];
-
-let delKey = document.querySelector("#backspace");
-delKey.addEventListener('click', backspace);
-delKey = document.querySelector("#clear");
-delKey.addEventListener('click', clearInput);
-delKey = [];
-
 window.addEventListener('keydown', keyPress);
-
-
-// module.exports = {
-//     add,
-//     subtract,
-//     multiply,
-//     divide,
-//     mod,
-//}

@@ -1,4 +1,4 @@
-const calculator = require('./index.js');
+const calculator = require('./math.js');
 
 describe('add', function() {
     it('adds positive numbers', function() {
